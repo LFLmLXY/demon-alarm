@@ -1,0 +1,17 @@
+# 构建产物
+build/
+*.apk.idsig
+build.log
+
+# 签名材料：私钥绝不进仓库（build.mjs 检测到缺失会自动重新生成一把）
+signing/
+
+# 本机 SDK / IDE 配置
+.android-sdk/
+.idea/
+*.iml
+local.properties
+
+# 系统垃圾
+Thumbs.db
+.DS_Store

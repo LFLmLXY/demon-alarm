@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#FFFDF6F1</color>
+    <color name="bg_top">#FFFFF4EC</color>
+    <color name="bg_bottom">#FFFBE5DA</color>
+    <color name="card">#FFFFFFFF</color>
+    <color name="red">#FFEA5237</color>
+    <color name="text">#FF221B1A</color>
+    <color name="icon_bg">#FFF98A5E</color>
+    <color name="ring_bg">#FF1A0609</color>
+    <color name="ring_text">#FFFDF3EF</color>
+</resources>

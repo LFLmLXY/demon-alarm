@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 亮色暖调：奶油纸面 + 珊瑚红，早上第一眼看上去是"可以点进去"的 -->
+    <style name="DemonTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:colorAccent">@color/red</item>
+        <item name="android:statusBarColor">@color/bg_top</item>
+        <item name="android:navigationBarColor">@color/bg_bottom</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:textColorPrimary">@color/text</item>
+        <item name="android:textColorSecondary">#8C7C74</item>
+    </style>
+
+    <!-- 响铃页：深夜深红，灯光刺眼也不至于把眼睛闪瞎 -->
+    <style name="DemonRingTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ring_bg</item>
+        <item name="android:colorAccent">@color/red</item>
+        <item name="android:statusBarColor">@color/ring_bg</item>
+        <item name="android:navigationBarColor">@color/ring_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:textColorPrimary">@color/ring_text</item>
+        <item name="android:windowShowWallpaper">false</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

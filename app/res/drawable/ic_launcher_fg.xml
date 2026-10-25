@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- White alarm clock with coral hands, drawn inside the 108dp adaptive-icon canvas.
+     Everything important stays within the 72dp safe zone (18..90). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- ringing bells: deliberately overlapping the body so the silhouette reads as one clock -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M37,32 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M71,32 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
+
+    <!-- two little feet -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:pathData="M43,78 L36,88" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:pathData="M65,78 L72,88" />
+
+    <!-- clock body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,34 a23,23 0 1,0 0,46 a23,23 0 1,0 0,-46 Z" />
+
+    <!-- soft inner ring -->
+    <path
+        android:strokeColor="#FFFFD8CE"
+        android:strokeWidth="2.5"
+        android:pathData="M54,39 a18,18 0 1,0 0,36 a18,18 0 1,0 0,-36 Z" />
+
+    <!-- hands -->
+    <path
+        android:strokeColor="#FFE0453C"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:pathData="M54,57 L54,44" />
+    <path
+        android:strokeColor="#FFE0453C"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:pathData="M54,57 L65,63" />
+
+    <!-- centre pin -->
+    <path
+        android:fillColor="#FFE0453C"
+        android:pathData="M54,57 m-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0 Z" />
+</vector>
