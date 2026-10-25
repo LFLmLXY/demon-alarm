@@ -161,3 +161,18 @@ APK 内含 `res/drawable/ic_launcher_bg.xml`、`ic_launcher_fg.xml`、`mipmap-an
 生成脚本 `tools/preview_icon.py`（任意目录可跑，输出到项目根）与 `tools/preview_screens.py`（要在 `build/` 里跑，
 输出 `build/screens-preview.png`；build 目录会被重建清空，脚本已另存到 tools/）。
 仍未上真机验证：Light 父主题下 NumberPicker / Switch / EditText 的原生渲染。
+
+## 发布到 GitHub（v1.5）
+
+- 仓库：<https://github.com/LFLmLXY/demon-alarm>（public，MIT，10 个 topics）
+- Release：<https://github.com/LFLmLXY/demon-alarm/releases/tag/v1.5>，资产 `demon-alarm.apk`（62,310 字节）
+- 首次推送踩的坑：git for Windows 的 schannel 后端在系统代理（127.0.0.1:7897）下报
+  `schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS (0x8009030e)`；
+  解决：仓库内 `git config http.sslBackend openssl` + `http.schannelCheckRevoke false`
+  （直连反而 `Recv failure: Connection was reset`，仍要走代理）。
+- 凭据：`~/.git-credentials` 里的 OAuth token 用 `GIT_CONFIG_COUNT` 环境变量注入
+  `http.extraHeader: Authorization: Basic ...` 推送，避免 token 出现在命令行或日志里。
+- 建仓 / topics / Release 资产上传：Node 的 https 直接调 REST API（系统 curl 在这台机器上不可用）。
+- `signing/` 已在 `.gitignore` 里，仓库中没有私钥；别人 clone 后跑 `build.mjs` 会生成新 keystore，
+  签名不同必须先卸载旧版再装。Releases 里的 APK 用的是本机那把，可覆盖升级。
+
