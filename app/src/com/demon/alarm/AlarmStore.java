@@ -173,6 +173,12 @@ public final class AlarmStore {
     /** Seconds the backup fires after the primary. */
     static final long BACKUP_DELAY_MS = 20000L;
 
+    /** requestCode of the safety copy of a "暂停" re-arm. */
+    static final int SNOOZE_BACKUP_REQUEST = 5000;
+
+    /** Seconds the snooze safety copy fires after the snoozed alarm. */
+    static final long SNOOZE_BACKUP_DELAY_MS = 15000L;
+
     static PendingIntent showIntent(Context c) {
         Intent i = new Intent(c, MainActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -222,11 +228,19 @@ public final class AlarmStore {
 
     /** "暂停" is a short taunt: the alarm comes back on its own after delayMs, it is never cancelled. */
     public static void scheduleSnoozeMs(Context c, Alarm a, long delayMs, int levelBoost) {
-        AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
-        if (am == null) return;
         long at = System.currentTimeMillis() + Math.max(1000L, delayMs);
         prefs(c).edit().putLong(KEY_SNOOZE_AT, at).apply();
-        setExact(am, at, fireIntent(c, a.id, 8000 + a.id, levelBoost));
+        // 暂停回来这一下也必须走 setAlarmClock：熄屏进入 Doze 之后 setExactAndAllowWhileIdle 会被推迟到
+        // 维护窗口（同一个 app 还有「9 分钟一次」的配额），暂停 10 秒实际可能几分钟后才响，
+        // 而 setAlarmClock 是唯一不被 Doze 推迟的闹钟类型。
+        arm(c, at, fireIntent(c, a.id, 8000 + a.id, levelBoost));
+        arm(c, at + SNOOZE_BACKUP_DELAY_MS,
+                fireIntent(c, a.id, SNOOZE_BACKUP_REQUEST + a.id, levelBoost, true));
+    }
+
+    /** Marks the pending 暂停 as consumed, so the snooze safety copy does not get suppressed. */
+    public static void clearSnoozeAt(Context c) {
+        prefs(c).edit().remove(KEY_SNOOZE_AT).apply();
     }
 
     public static long getSnoozeAt(Context c) {
@@ -235,7 +249,10 @@ public final class AlarmStore {
 
     public static void cancelSnooze(Context c, int id) {
         AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
-        if (am != null) am.cancel(fireIntent(c, id, 8000 + id, 0));
+        if (am != null) {
+            am.cancel(fireIntent(c, id, 8000 + id, 0));
+            am.cancel(fireIntent(c, id, SNOOZE_BACKUP_REQUEST + id, 0, true));
+        }
         prefs(c).edit().remove(KEY_SNOOZE_AT).apply();
     }
 
@@ -249,6 +266,7 @@ public final class AlarmStore {
         am.cancel(fireIntent(c, id, 1000 + id, 0));
         am.cancel(fireIntent(c, id, BACKUP_REQUEST + id, 0, true));
         am.cancel(fireIntent(c, id, 8000 + id, 0));
+        am.cancel(fireIntent(c, id, SNOOZE_BACKUP_REQUEST + id, 0, true));
     }
 
     /** Cancels only the safety copy, once the real alarm has already woken the app up. */

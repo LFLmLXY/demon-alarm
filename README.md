@@ -26,8 +26,22 @@
 
 
 - 安装包：[`demon-alarm.apk`](https://github.com/LFLmLXY/demon-alarm/releases/latest)（60.8 KB，也可以自己 `node build.mjs` 现编）
-- 包名：`com.demon.alarm` ｜ 版本 **1.5**（versionCode 6） ｜ **Android 8.0+（minSdk 26）**，targetSdk 34
+- 包名：`com.demon.alarm` ｜ 版本 **1.6**（versionCode 7） ｜ **Android 8.0+（minSdk 26）**，targetSdk 34
 - 签名：v2 + v3，自签名（自用）；keystore 固定在 `signing/demon.keystore`，1.2 起可**覆盖安装**
+
+### 1.6 改了什么
+
+实测反馈：「仅震动模式按了暂停按钮后，关屏就不亮屏、也不震了」。两个独立的原因：
+
+- **暂停的那一下走错调度通道**：普通闹钟用 `setAlarmClock`（Doze 不会推迟），而「暂停」用的是
+  `setExactAndAllowWhileIdle` —— 熄屏进入 Doze 后它会被推迟到维护窗口，同一个 app 还有「9 分钟一次」的配额，
+  所以暂停 10 秒实际可能几分钟后才响，甚至整轮丢掉。现在暂停也走 `setAlarmClock`，并额外配一个 15 秒后的安全副本。
+- **「已结束」标记没有被重置**：点过暂停会置上 `RingActivity.dismissed`，而服务看到这个标记就再也不拉起响铃页
+  （它以为这一轮已经处理过了），要等下一次 `onCreate` 才清 —— 可响铃页永远等不到。现在每轮响铃开始时（`begin()`）
+  先 `resetDismissed()`。
+- **补一把亮屏锁**：锁屏下 `startActivity` 可能被系统拦，全屏 intent 也不保证立刻兑现，「仅震动」又没有声音提醒。
+  现在响铃服务会拿 `SCREEN_BRIGHT_WAKE_LOCK | ACQUIRE_CAUSES_WAKEUP` 把屏幕点亮 12 秒（响铃期间按需再点）。
+- 版本 1.6（versionCode 7），签名不变，可直接覆盖安装。
 
 ### 1.5 改了什么
 

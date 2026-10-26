@@ -34,6 +34,10 @@ public class AlarmReceiver extends BroadcastReceiver {
             if (backup) {
                 if (AlarmStore.getRinging(c) == id) return;
                 if (AlarmStore.getSnoozeAt(c) > System.currentTimeMillis()) return;
+            } else {
+                // the 暂停 this alarm was waiting for is being served now: drop the marker, otherwise
+                // the snooze safety copy 15 s later would be suppressed as "a pause is still pending"
+                AlarmStore.clearSnoozeAt(c);
             }
 
             AlarmStore.markFired(c, id);

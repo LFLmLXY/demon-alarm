@@ -47,6 +47,15 @@ public class RingActivity extends Activity {
         dismissed = true;
     }
 
+    /**
+     * A new ringing session starts: forget the flag that said "the user already dealt with it".
+     * Without this, one 暂停 would poison the process forever - the service refuses to launch the
+     * ring screen for any later round because it still thinks the last one was dismissed.
+     */
+    public static void resetDismissed() {
+        dismissed = false;
+    }
+
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final SimpleDateFormat clockFmt = new SimpleDateFormat("HH:mm:ss", Locale.CHINA);
 

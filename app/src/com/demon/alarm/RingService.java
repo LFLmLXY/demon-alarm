@@ -52,6 +52,7 @@ public class RingService extends Service {
     private boolean vibrating = false;
     private long lastVibrateAt = 0;
     private PowerManager.WakeLock wakeLock;
+    private PowerManager.WakeLock screenLock;
     private AudioManager audio;
     private Handler handler;
     private boolean stopped = true;
@@ -251,6 +252,8 @@ public class RingService extends Service {
         activeBoost = boost;
         stopped = false;
         running = true;
+        // fresh session: the "already dismissed" flag of the previous round (e.g. after a 暂停) must go
+        RingActivity.resetDismissed();
 
         // boost == 0 means a brand new ringing session: the pause tokens are handed back.
         if (boost == 0) AlarmStore.setTier(this, 0);
@@ -267,6 +270,7 @@ public class RingService extends Service {
 
         startForegroundCompat();
         acquireWakeLock();
+        wakeScreen();
         AlarmStore.setLastError(this, "");
         vibrating = false;
         lastVibrateAt = 0;
@@ -295,6 +299,7 @@ public class RingService extends Service {
             }
         }
         ensureVibration();
+        if (!RingActivity.isAlive()) wakeScreen();
         launchActivity();
         AlarmStore.armWatchdog(this, 60000);
     }
@@ -507,6 +512,26 @@ public class RingService extends Service {
         }
     }
 
+    /**
+     * 把屏幕点亮。锁屏状态下 startActivity 可能被系统拦下，全屏 intent 也不保证立刻兑现，
+     * 「仅震动」模式又没有任何声音能提醒用户 —— 所以这里再拿一把带 ACQUIRE_CAUSES_WAKEUP 的亮屏锁兜底，
+     * 12 秒后自动熄灭（响铃期间 ticker 会按需再点）。
+     */
+    private void wakeScreen() {
+        try {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm == null || pm.isInteractive()) return;
+            if (screenLock == null) {
+                screenLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK
+                        | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
+                        "DemonAlarm::screen");
+                screenLock.setReferenceCounted(false);
+            }
+            screenLock.acquire(12000L);
+        } catch (Throwable ignore) {
+        }
+    }
+
     // ------------------------------------------------------------------ activity launch
 
     void launchActivity() {
@@ -636,6 +661,10 @@ public class RingService extends Service {
         }
         try {
             if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
+        } catch (Exception ignore) {
+        }
+        try {
+            if (screenLock != null && screenLock.isHeld()) screenLock.release();
         } catch (Exception ignore) {
         }
         AlarmStore.setRinging(this, -1, 0);

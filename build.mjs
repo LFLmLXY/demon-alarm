@@ -79,8 +79,8 @@ run(AAPT2, [
   '--auto-add-overlay',
   '--min-sdk-version', '26',
   '--target-sdk-version', '34',
-  '--version-code', '6',
-  '--version-name', '1.5',
+  '--version-code', '7',
+  '--version-name', '1.6',
 ]);
 
 // ---------------------------------------------------------------- 3. javac

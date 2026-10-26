@@ -176,3 +176,25 @@ APK 内含 `res/drawable/ic_launcher_bg.xml`、`ic_launcher_fg.xml`、`mipmap-an
 - `signing/` 已在 `.gitignore` 里，仓库中没有私钥；别人 clone 后跑 `build.mjs` 会生成新 keystore，
   签名不同必须先卸载旧版再装。Releases 里的 APK 用的是本机那把，可覆盖升级。
 
+## v1.6（修「仅震动 + 暂停 → 关屏后既不亮屏也不震」）
+
+用户反馈：「震动模式按了暂停按钮后，关闭屏幕就不亮屏震动了」。拆成两个独立 bug：
+
+1. **暂停走的是弱调度通道**：`AlarmStore.scheduleSnoozeMs()` 原来直接 `setExact()` →
+   `setExactAndAllowWhileIdle()`。熄屏进 Doze 后这条会被推迟到维护窗口，而且同一个 app 有「9 分钟一次」的配额，
+   所以暂停 10 秒实际可能几分钟后才响，或整轮丢掉。改成走 `arm()`（即 `setAlarmClock`，Doze 不推迟），
+   并在 `at + 15 s` 再摆一份安全副本（`SNOOZE_BACKUP_REQUEST = 5000`、`SNOOZE_BACKUP_DELAY_MS = 15000`）。
+2. **`RingActivity.dismissed` 永不重置**：`snoozeNow()` 里 `RingActivity.markDismissed()` 把静态标记置 true，
+   而 `RingService.launchActivity()` 是 `if (RingActivity.isAlive() || RingActivity.isDismissed()) return;`
+   —— 于是下一轮（包括暂停回来）永远拉不起响铃页，也就永远走不到 `RingActivity.onCreate()` 里的 `dismissed = false`。
+   新增 `RingActivity.resetDismissed()`，在 `RingService.begin()` 一开始调用。
+3. **补亮屏兜底**：`RingService.wakeScreen()` —— 屏幕灭着就 `pm.newWakeLock(SCREEN_BRIGHT_WAKE_LOCK |
+   ACQUIRE_CAUSES_WAKEUP | ON_AFTER_RELEASE)` 点屏 12 秒（`begin()` 与 `ensureRinging()` 里按需调用，
+   `shutdown()` 释放）。锁屏下 startActivity 会被拦、全屏 intent 不保证立刻兑现，「仅震动」又没有声音，必须有一把亮屏锁。
+4. **暂停标记清理**：`AlarmReceiver` 收到非 backup 的 FIRE 时 `AlarmStore.clearSnoozeAt()`，
+   否则 15 秒后的安全副本会被「还有暂停没兑现」的判断吞掉；`cancelSnooze()` / `cancelFire()` 一并取消副本。
+
+版本 versionCode 7 / versionName 1.6；构建 `node build.mjs` 通过：size 60.8 KB（62,236 字节）、
+v2/v3 签名 true、cert SHA-256 仍是 529819e5…（与 1.2–1.5 相同 → 直接覆盖安装）。
+
+
